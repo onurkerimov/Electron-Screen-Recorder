@@ -1,5 +1,6 @@
 # Electron Screen Recorder
 
-Build a screen recorder with Electron from scratch. 
-
-Watch the [Electron 8 Tutorial](https://youtu.be/3yqDxhR2XxE) on YouTube. 
+Run `npm i` to install packages
+Run `npm start` to start virtual app window
+Run  `rs` to update app state
+Run `npm run make` to build the app
