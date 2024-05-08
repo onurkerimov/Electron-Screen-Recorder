@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository contains the code for 
+This repository contains the code for a versatile desktop screen recorder built with Electron.js. This application allows users to select their preferred stream or window for recording. Compatible and easily installable across multiple platforms including Mac, Windows, and Linux. Perfect for capturing your screen activities with ease and precision.
 
 ## Setup
 
