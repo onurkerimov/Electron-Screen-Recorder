@@ -10,10 +10,10 @@ This repository contains the code for
 
 To run this project locally, follow these steps:
 
-5. Run `npm i` to install packages
-6. Run `npm start` to start virtual app window
-7. Run  `rs` to update app state
-8. Run `npm run make` to build the app
+1. Run `npm i` to install packages
+2. Run `npm start` to start virtual app window
+3. Run  `rs` to update app state
+4. Run `npm run make` to build the app
 
 ## Contributing
 
