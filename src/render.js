@@ -1,4 +1,7 @@
 const { desktopCapturer, remote, ipcRenderer } = require('electron');
+const { eventTypes } = require('./shared');
+
+const { Menu } = remote;
 
 function getCurrentDisplay(x, y) {
   return detectedDisplays.find(display => {
@@ -39,8 +42,8 @@ const getNormalizedPosition = (x, y, currentDisplay, margin = 0.12) => {
   return { x , y }
 }
 
-ipcRenderer.on('cursor-position', (event, cursorPosition) => {
-  const { x,y } = cursorPosition
+ipcRenderer.on(eventTypes.updateCursor, (_event, cursorPosition) => {
+  const { x, y } = cursorPosition
   const currentDisplay = getCurrentDisplay(x,y)
   const pos = getNormalizedPosition(x,y, currentDisplay)
 
@@ -62,8 +65,6 @@ function maximizeWindow () {
 
 document.body.addEventListener('dblclick', maximizeWindow)
 
-const { Menu } = remote;
-
 // Buttons
 const videoElement = document.querySelector('video');
 
@@ -74,7 +75,7 @@ const videoSelectBtn = document.getElementById('videoSelectBtn');
 videoSelectBtn.onclick = getVideoSources;
 
 let detectedDisplays = []
-ipcRenderer.on('detect-displays', (event, payload) => {
+ipcRenderer.on(eventTypes.updateDisplays, (event, payload) => {
   detectedDisplays = payload
 });
 

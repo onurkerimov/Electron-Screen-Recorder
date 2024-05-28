@@ -1,5 +1,6 @@
 const { app, screen, BrowserWindow } = require('electron');
 const path = require('path');
+const { eventTypes } = require('./shared');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -26,10 +27,10 @@ const createWindow = () => {
   // Emit cursor position at regular intervals
   setInterval(() => {
     const displays = screen.getAllDisplays()
-    mainWindow.webContents.send('detect-displays', displays);
+    mainWindow.webContents.send(eventTypes.updateDisplays, displays);
     
     const cursorPosition = screen.getCursorScreenPoint();
-    mainWindow.webContents.send('cursor-position', cursorPosition);
+    mainWindow.webContents.send(eventTypes.updateCursor, cursorPosition);
   }, 100); // Adjust the interval as needed
 };
 
