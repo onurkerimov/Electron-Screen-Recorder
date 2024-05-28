@@ -13,3 +13,5 @@
 //     return true;
 //   });
 // }
+
+exports.methodize = (obj, key) => obj[key].bind(obj)

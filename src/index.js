@@ -7,9 +7,17 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
+let mainWindow
+
+const updateDisplays = (event) => {
+  if(event) console.log('update displays')
+  const displays = screen.getAllDisplays()
+  mainWindow.webContents.send(eventTypes.updateDisplays, displays);
+}
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     titleBarStyle: 'hidden',
     width: 800,
     height: 600,
@@ -23,12 +31,13 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  screen.on('display-added', updateDisplays)
+  screen.on('display-removed', updateDisplays)
   
   // Emit cursor position at regular intervals
   setInterval(() => {
-    const displays = screen.getAllDisplays()
-    mainWindow.webContents.send(eventTypes.updateDisplays, displays);
-
+    updateDisplays()
     const cursor = screen.getCursorScreenPoint();
     mainWindow.webContents.send(eventTypes.updateCursor, cursor);
   }, 100);

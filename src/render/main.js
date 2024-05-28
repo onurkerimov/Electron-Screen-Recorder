@@ -1,12 +1,15 @@
 const { desktopCapturer, remote, ipcRenderer } = require('electron');
 const { eventTypes } = require('../shared');
+const { methodize } = require('./utils');
 
 const { Menu } = remote
 
-const methodize = (obj, key) => obj[key].bind(obj)
+let allDisplays = []
+let currentDisplay
+
 const setProperty = methodize(document.documentElement.style, 'setProperty')
 
-const distortion = (value, gain) => {
+const applyMargin = (value, gain) => {
   if(value < gain) return 0
   if(value > 1-gain) return 1
   return (value - gain) / (1 - 2*gain)
@@ -21,14 +24,15 @@ const getOffset = (x, y, currentDisplay, margin = 0.12) => {
     }
 
     return {
-      x: distortion(intermediate.x, margin),
-      y: distortion(intermediate.y, margin),
+      x: applyMargin(intermediate.x, margin),
+      y: applyMargin(intermediate.y, margin),
     }
   }
 
   return { x , y }
 }
 
+// Update CSS variables when new cursor coordinates are received
 ipcRenderer.on(eventTypes.updateCursor, (_event, cursorPosition) => {
   const { x, y } = cursorPosition
   const offset = getOffset(x, y, currentDisplay)
@@ -36,19 +40,18 @@ ipcRenderer.on(eventTypes.updateCursor, (_event, cursorPosition) => {
   setProperty('--y-offset', offset.y)
 });
 
+// Since all of the application is a huge "drag handle", also act like a titlebar
 function maximizeWindow () {
   const window = remote.BrowserWindow.getFocusedWindow();
   window.isMaximized() ? window.unmaximize() : window.maximize();
 }
-
 document.body.addEventListener('dblclick', maximizeWindow)
 
 const videoSelectBtn = document.getElementById('videoSelectBtn');
 videoSelectBtn.onclick = getVideoSources;
 
-let detectedDisplays = []
 ipcRenderer.on(eventTypes.updateDisplays, (event, payload) => {
-  detectedDisplays = payload
+  allDisplays = payload
 });
 
 // Get the available video sources
@@ -61,7 +64,10 @@ async function getVideoSources() {
     sources.map(source => {
       return {
         label: source.name,
-        click: () => onSetSource(source)
+        click: () => {
+          videoSelectBtn.innerText = source.name;
+          onSetSource(source)
+        }
       };
     })
   );
@@ -69,14 +75,11 @@ async function getVideoSources() {
   videoOptionsMenu.popup();
 }
 
-let currentDisplay
-
 async function onSetSource(source) {
   const displayId = parseInt(source.display_id)
-  currentDisplay = detectedDisplays.find((s) => s.id === displayId)
-  
+  currentDisplay = allDisplays.find((s) => s.id === displayId)
 
-  videoSelectBtn.innerText = source.name;
+  document.body.classList.add('active')
 
   const constraints = {
     audio: false,
@@ -90,11 +93,11 @@ async function onSetSource(source) {
   };
 
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
   const videoElement = document.querySelector('video')
   videoElement.srcObject = stream;
   videoElement.width = currentDisplay.bounds.width
   videoElement.height = currentDisplay.bounds.height
+  videoElement.onloadedmetadata = () => videoElement.play()
 
   setProperty(
     '--compensate', 
@@ -105,6 +108,4 @@ async function onSetSource(source) {
     '--width-ratio', 
    currentDisplay.bounds.width / innerWidth
   )
-  
-    videoElement.play();
 }
