@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, screen, BrowserWindow } = require('electron');
 const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -9,6 +9,7 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    titleBarStyle: 'hidden',
     width: 800,
     height: 600,
     webPreferences: {
@@ -21,6 +22,15 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  // Emit cursor position at regular intervals
+  setInterval(() => {
+    const displays = screen.getAllDisplays()
+    mainWindow.webContents.send('detect-displays', displays);
+    
+    const cursorPosition = screen.getCursorScreenPoint();
+    mainWindow.webContents.send('cursor-position', cursorPosition);
+  }, 100); // Adjust the interval as needed
 };
 
 // This method will be called when Electron has finished
@@ -44,6 +54,7 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
