@@ -19,19 +19,19 @@ const createWindow = () => {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'render/index.html'));
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-
+  
   // Emit cursor position at regular intervals
   setInterval(() => {
     const displays = screen.getAllDisplays()
     mainWindow.webContents.send(eventTypes.updateDisplays, displays);
-    
-    const cursorPosition = screen.getCursorScreenPoint();
-    mainWindow.webContents.send(eventTypes.updateCursor, cursorPosition);
-  }, 100); // Adjust the interval as needed
+
+    const cursor = screen.getCursorScreenPoint();
+    mainWindow.webContents.send(eventTypes.updateCursor, cursor);
+  }, 100);
 };
 
 // This method will be called when Electron has finished

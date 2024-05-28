@@ -1,23 +1,10 @@
 const { desktopCapturer, remote, ipcRenderer } = require('electron');
-const { eventTypes } = require('./shared');
+const { eventTypes } = require('../shared');
 
-const { Menu } = remote;
+const { Menu } = remote
 
-function getCurrentDisplay(x, y) {
-  return detectedDisplays.find(display => {
-    const { bounds } = display;
-
-    const x1 = bounds.x;
-    const x2 = x1 + bounds.width;
-    if (x < x1 || x2 < x) return false;
-
-    const y1 = bounds.y;
-    const y2 = y1 + bounds.height;
-    if (y < y1 || y2 < y) return false;
-
-    return true;
-  });
-}
+const methodize = (obj, key) => obj[key].bind(obj)
+const setProperty = methodize(document.documentElement.style, 'setProperty')
 
 const distortion = (value, gain) => {
   if(value < gain) return 0
@@ -25,7 +12,7 @@ const distortion = (value, gain) => {
   return (value - gain) / (1 - 2*gain)
 }
 
-const getNormalizedPosition = (x, y, currentDisplay, margin = 0.12) => {
+const getOffset = (x, y, currentDisplay, margin = 0.12) => {
   if (currentDisplay) {
     const { bounds } = currentDisplay
     const intermediate = {
@@ -44,18 +31,9 @@ const getNormalizedPosition = (x, y, currentDisplay, margin = 0.12) => {
 
 ipcRenderer.on(eventTypes.updateCursor, (_event, cursorPosition) => {
   const { x, y } = cursorPosition
-  const currentDisplay = getCurrentDisplay(x,y)
-  const pos = getNormalizedPosition(x,y, currentDisplay)
-
-  document.documentElement.style.setProperty(
-    '--x-offset', 
-    pos.x
-  )
-
-  document.documentElement.style.setProperty(
-    '--y-offset', 
-    pos.y
-  )
+  const offset = getOffset(x, y, currentDisplay)
+  setProperty('--x-offset', offset.x)
+  setProperty('--y-offset', offset.y)
 });
 
 function maximizeWindow () {
@@ -64,12 +42,6 @@ function maximizeWindow () {
 }
 
 document.body.addEventListener('dblclick', maximizeWindow)
-
-// Buttons
-const videoElement = document.querySelector('video');
-
-// const sourceTypeBtn = document.getElementById('sourceTypeBtn');
-// sourceTypeBtn.onclick = getSourceType;
 
 const videoSelectBtn = document.getElementById('videoSelectBtn');
 videoSelectBtn.onclick = getVideoSources;
@@ -89,18 +61,20 @@ async function getVideoSources() {
     sources.map(source => {
       return {
         label: source.name,
-        click: () => selectSource(source)
+        click: () => onSetSource(source)
       };
     })
   );
 
-
   videoOptionsMenu.popup();
 }
 
-// Change the videoSource window to record
-async function selectSource(source) {
-  const currentDisplay = detectedDisplays[parseInt(source.display_id) - 1]
+let currentDisplay
+
+async function onSetSource(source) {
+  const displayId = parseInt(source.display_id)
+  currentDisplay = detectedDisplays.find((s) => s.id === displayId)
+  
 
   videoSelectBtn.innerText = source.name;
 
@@ -111,36 +85,26 @@ async function selectSource(source) {
         chromeMediaSource: 'desktop',
         chromeMediaSourceId: source.id,
         minWidth: currentDisplay.bounds.width * currentDisplay.scaleFactor 
-
       },
-      optional: [
-        { 
-          minWidth: currentDisplay.bounds.width * currentDisplay.scaleFactor 
-        },
-      ]
     }
   };
 
-  // Create a Stream
-  const stream = await navigator.mediaDevices
-    .getUserMedia(constraints);
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-  // Preview the source in a video element
+  const videoElement = document.querySelector('video')
   videoElement.srcObject = stream;
-  videoElement.width = currentDisplay.bounds.width// * 2 
-  videoElement.height = currentDisplay.bounds.height// * 2
+  videoElement.width = currentDisplay.bounds.width
+  videoElement.height = currentDisplay.bounds.height
 
-  document.documentElement.style.setProperty(
+  setProperty(
     '--compensate', 
     (innerWidth/innerHeight) / (currentDisplay.bounds.width / currentDisplay.bounds.height)
   )
 
-  document.documentElement.style.setProperty(
+  setProperty(
     '--width-ratio', 
    currentDisplay.bounds.width / innerWidth
   )
   
-  
-  // videoElement.width = detectedDisplays
-  videoElement.play();
+    videoElement.play();
 }
