@@ -1,4 +1,4 @@
-const { app, screen, BrowserWindow } = require('electron');
+const { app, screen, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { eventTypes } = require('./shared');
 
@@ -8,6 +8,7 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 
 let mainWindow
+let interval
 
 const updateDisplays = (event) => {
   if(event) console.log('update displays')
@@ -19,24 +20,37 @@ const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     titleBarStyle: 'hidden',
-    width: 800,
-    height: 600,
+    width: 400,
+    height: 400,
+    minWidth: 350,
+    minHeight: 350,
     webPreferences: {
       nodeIntegration: true
     }
   });
 
+  // Open links in external browser
+  mainWindow.webContents.on('new-window', function(e, url) {
+    e.preventDefault();
+    require('electron').shell.openExternal(url);
+  });
+
+  mainWindow.setBackgroundColor('#282828')
+
+  // Remove the window's menu bar. (Linux and Windows)
+  mainWindow.removeMenu()
+
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'render/index.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   screen.on('display-added', updateDisplays)
   screen.on('display-removed', updateDisplays)
   
   // Emit cursor position at regular intervals
-  setInterval(() => {
+  interval = setInterval(() => {
     updateDisplays()
     const cursor = screen.getCursorScreenPoint();
     mainWindow.webContents.send(eventTypes.updateCursor, cursor);
@@ -65,6 +79,19 @@ app.on('activate', () => {
   }
 });
 
+ipcMain.on("fullscreenon",() => {
+  window.setAlwaysOnTop(true, 'screen-saver');
+  window.setFullScreen(true);
+})
+
+ipcMain.on("fullscreenoff", () => {
+  mainWindow.setFullScreen(false);
+  mainWindow.setAlwaysOnTop(true, 'floating')
+})
+
+app.on('window-all-closed', () => {
+  clearInterval(interval)
+})
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.

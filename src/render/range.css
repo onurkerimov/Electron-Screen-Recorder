@@ -1,0 +1,20 @@
+.range-container {
+	position: relative;
+}
+
+input[type=range] {
+  margin-top: 18px;
+  appearance: none;
+	outline: none;
+}
+
+input[type=range] + label {
+	padding: 2px 0;
+	position: absolute;
+	top: 0px;
+	left: 10px;
+	text-align: center;
+	width: 30px;
+  font-size: 10px;
+	color: var(--highlight);
+}

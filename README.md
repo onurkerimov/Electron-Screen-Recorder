@@ -1,4 +1,10 @@
-# Electron Screen Recorder
+# Screen Magnifier
+
+- Suitable for multiple screens
+- Totally can be used with single screen
+- Follows mouse cursor
+- Easily full screenable
+- Escape exits full screen
 
 <img height="400" src="Screenshot.png">
 
