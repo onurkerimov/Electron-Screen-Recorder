@@ -134,12 +134,14 @@ async function getVideoSources() {
 }
 
 function stopStreamedVideo() {
-  const tracks = stream.getTracks();
-
-  tracks.forEach((track) => {
-    track.stop();
-  });
-
+  if (stream) {
+    const tracks = stream.getTracks();
+    if (tracks) {
+      tracks.forEach((track) => {
+        track.stop();
+      });
+    }
+  }
   videoElement.srcObject = null;
 }
 
@@ -181,3 +183,4 @@ async function onSetSource(source) {
 
 const clickOutsideDiv = document.getElementById('click-outside')
 clickOutsideDiv.addEventListener('click', (e) => e.stopPropagation())
+clickOutsideDiv.addEventListener('dblclick', (e) => e.stopPropagation())
